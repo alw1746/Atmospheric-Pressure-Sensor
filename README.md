@@ -5,7 +5,6 @@ display and log CSV data to serial port. Hardware schematic available on https:/
 Uses Taskscheduler to poll data from the sensor. (https://github.com/arkhipenko/TaskScheduler)
 Taskscheduler is very useful and easy to use, check out this sample code:
 
-<pre><code>
   #include <TaskScheduler.h>
   //Taskscheduler callback methods prototypes
   void t1Callback();
@@ -32,4 +31,3 @@ Taskscheduler is very useful and easy to use, check out this sample code:
   void loop () {
     runner.execute();
   }
-</code></pre>
