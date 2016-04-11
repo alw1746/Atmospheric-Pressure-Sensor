@@ -88,7 +88,7 @@ void t1Callback()
   sprintf(presS,"%lu",pressure);
   float atm = (float)pressure / 101325; // "standard atmosphere"
   dtostrf(atm,6,4,atmS);
-  float altitude = calcAltitude(pressure); //Uncompensated caculation - in Meters 
+  float altitude = calcAltitude(pressure,15.0,101325); 
   dtostrf(altitude,5,2,altS);
 
   lcd.setCursor(0, 1);
@@ -291,8 +291,8 @@ int readRegister(int deviceAddress, byte address){
   return v;
 }
 
-float calcAltitude(float pressure){
-
+float calcAltitudeOriginal(float pressure){
+//Uncompensated caculation - in Meters
   float A = pressure/101325;
   float B = 1/5.25588;
   float C = pow(A,B);
@@ -300,6 +300,40 @@ float calcAltitude(float pressure){
   C = C /0.0000225577;
 
   return C;
+}
+
+//calculate altitude given pressure,sealevel temp,sealevel pressure using
+//hypsometric equation. Default ISA standard for sealevel temp and pressure
+//are 15C, 101325 Pa. Max altitude 20,000m only, returns -1000 on error.
+//See http://www.mide.com/pages/air-pressure-at-altitude-calculator for details.
+//
+float calcAltitude(float pressure,float seatemp,float seapressure)
+{
+  float kelvin=273.15+seatemp;
+  float M=0.0289644;
+  float g=9.80665;
+  float R=8.31432;
+  if((seapressure/pressure)<(101325/22632.1))  //up to 11,000m
+  {
+    float d=-0.0065;
+    float e=0;
+    float j=pow((pressure/seapressure),(R*d)/(g*M));
+    return e+((kelvin*((1/j)-1))/d);
+  }
+  else
+  {
+    if((seapressure/pressure)<(101325/5474.89))  //up to 20,000m
+    {
+      float e=11000;
+      float b=kelvin-71.5;
+      float f=(R*b*(log(pressure/seapressure)))/((-g)*M);
+      float l=101325;
+      float c=22632.1;
+      float h=((R*b*(log(l/c)))/((-g)*M))+e;
+      return h+f;
+    }
+  }
+  return -1000;    //invalid altitude
 }
 
 void loop () {
